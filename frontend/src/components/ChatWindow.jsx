@@ -46,6 +46,7 @@ function ChatWindow({
               id: message._id,
               role: message.role,
               content: message.content,
+              image: message.imageUrl || null,
             }))
           );
         }
@@ -70,7 +71,7 @@ function ChatWindow({
   }, [conversationId]);
 
   // Send message to AI
-  const handleSendMessage = async (message) => {
+  const handleSendMessage = async (message, imageFile) => {
     if (!conversationId) {
       setError("Please create a new chat before sending a message.");
       return;
@@ -82,6 +83,7 @@ function ChatWindow({
       id: Date.now(),
       role: "user",
       content: message,
+      image: imageFile ? URL.createObjectURL(imageFile) : null,
     };
 
     setMessages((previousMessages) => [
@@ -96,7 +98,7 @@ function ChatWindow({
     try {
       const response = await sendMessageToAI(
         message,
-        currentConversationId
+        currentConversationId,imageFile
       );
 
       if (response.conversationId) {
@@ -212,6 +214,7 @@ function ChatWindow({
               key={message.id}
               role={message.role}
               content={message.content}
+              image={message.image}
             />
           ))}
 

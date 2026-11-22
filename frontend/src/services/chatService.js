@@ -4,12 +4,24 @@ import api from "./api";
 const API_URL = "/chat";
 
 // Send message to AI
-export const sendMessageToAI = async (message, conversationId) => {
+
+// Send text and optional image to AI
+export const sendMessageToAI = async (
+  message,
+  conversationId,
+  imageFile = null
+) => {
   try {
-    const response = await api.post(API_URL, {
-      message,
-      conversationId,
-    });
+    const formData = new FormData();
+
+    formData.append("message", message || "");
+    formData.append("conversationId", conversationId);
+
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    const response = await api.post(API_URL, formData);
 
     return response.data;
   } catch (error) {
@@ -30,6 +42,7 @@ export const sendMessageToAI = async (message, conversationId) => {
     throw new Error("Something went wrong. Please try again.");
   }
 };
+
 
 // Get previous conversation history
 export const getChatHistory = async (conversationId) => {

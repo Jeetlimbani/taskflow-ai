@@ -1,5 +1,5 @@
 
-function MessageBubble({ role, content }) {
+function MessageBubble({ role, content, image }) {
   const isUser = role === "user";
 
   return (
@@ -15,7 +15,15 @@ function MessageBubble({ role, content }) {
             : "bg-gray-800 text-gray-100"
         }`}
       >
-        {content}
+        {content && <div>{content}</div>}
+
+        {image && (
+          <img
+            src={image}
+            alt="Uploaded attachment"
+            className="mt-2 max-w-full max-h-64 rounded-lg object-contain"
+          />
+        )}
       </div>
     </div>
   );
