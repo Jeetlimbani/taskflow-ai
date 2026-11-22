@@ -9,6 +9,7 @@ import {
   deleteChat,
 } from "../controllers/chatController.js";
 
+import uploadImage from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -18,7 +19,7 @@ router.use(authMiddleware);
 
 router.post("/conversations", createNewConversation);
 router.get("/conversations", getAllChats);
-router.post("/", chatWithAI);
+router.post("/", uploadImage, chatWithAI);
 router.get("/:conversationId", getChatHistory);
 router.delete("/conversations/:conversationId", deleteChat);
 

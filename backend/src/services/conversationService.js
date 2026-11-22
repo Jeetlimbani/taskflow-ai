@@ -60,7 +60,8 @@ export const saveMessage = async (
   conversationId,
   role,
   content,
-  userId
+  userId,
+  imageUrl = null
 ) => {
   try {
     let conversation = await Conversation.findOne({
@@ -95,6 +96,7 @@ export const saveMessage = async (
     conversation.messages.push({
       role,
       content,
+      imageUrl,
     });
 
     await conversation.save();

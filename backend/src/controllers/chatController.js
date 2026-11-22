@@ -1,7 +1,7 @@
-
 import { randomUUID } from "crypto";
 import { runTaskAgent } from "../agents/taskAgent.js";
-
+import { analyzeImage } from "../services/visionService.js";
+import { uploadImage as uploadImageToCloudinary } from "../services/imageService.js";
 import {
   saveMessage,
   getConversationMessages,
@@ -14,12 +14,16 @@ import {
 export const chatWithAI = async (req, res) => {
   try {
     const { message, conversationId } = req.body;
+    const image = req.file || null;
     const userId = req.user.id;
 
-    if (!message || typeof message !== "string" || !message.trim()) {
+    if (
+      (!message || typeof message !== "string" || !message.trim()) &&
+      !image
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Please provide a valid message",
+        message: "Please provide a message or upload an image.",
       });
     }
 
@@ -41,20 +45,47 @@ export const chatWithAI = async (req, res) => {
       });
     }
 
-    // Run AI agent with authenticated user ID
-    const aiResponse = await runTaskAgent(
-      message.trim(),
-      currentConversationId,
-      userId
-    );
+// Prepare user's message (also supports image-only requests)
+// Prepare user's message
+const userMessage = message?.trim() || "Please describe this image.";
 
-    // Save user's message
-    const userSaveResult = await saveMessage(
-      currentConversationId,
-      "user",
-      message.trim(),
-      userId
-    );
+let agentMessage = userMessage;
+let uploadedImageUrl = null;
+
+// Upload image to Cloudinary and analyze it using Groq Vision
+if (image) {
+  const uploadResult = await uploadImageToCloudinary(image.buffer);
+
+  uploadedImageUrl = uploadResult.imageUrl;
+
+  const imageAnalysis = await analyzeImage(image, userMessage);
+
+  agentMessage = `
+The user uploaded an image.
+
+Image analysis:
+${imageAnalysis}
+
+User's request:
+${userMessage}
+`;
+}
+
+// Run AI agent with authenticated user ID
+const aiResponse = await runTaskAgent(
+  agentMessage,
+  currentConversationId,
+  userId
+);
+
+// Save user's message
+const userSaveResult = await saveMessage(
+  currentConversationId,
+  "user",
+  userMessage,
+  userId,
+  uploadedImageUrl
+);
 
     // Save AI response
     const assistantSaveResult = await saveMessage(
